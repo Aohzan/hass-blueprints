@@ -1,0 +1,108 @@
+blueprint:
+  name: Window and temperature
+  description: Watch and alert on window state according to temperature
+  domain: automation
+  input:
+    window_binary_sensor:
+      name: Window's binary sensor
+      description: Must return 'on' when windows is open
+      selector:
+        entity:
+          domain: binary_sensor
+
+    outside_temperature_sensor:
+      name: Outside temperature sensor
+      description: Outside temperature sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+
+    room_temperature_sensor:
+      name: Room temperature sensor
+      description: Temperature sensor of the same room that the window
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+
+    temperature_min:
+      name: Minimum temperature
+      description: Minimum temperature wanted in the room
+      default: 19
+      selector:
+        number:
+          min: 5
+          max: 30
+          unit_of_measurement: °C
+
+    temperature_max:
+      name: Maximum temperature
+      description: Maximum temperature wanted in the room
+      default: 23
+      selector:
+        number:
+          min: 5
+          max: 30
+          unit_of_measurement: °C
+
+    notification_message:
+      name: Notification message
+      description: "Default: Window 'sensor name' open"
+      default: "Window {{ trigger.to_state.name | lower }} open"
+
+    repeat_notification:
+      name: Repeat notification
+      description: Number of time to repeat notification
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 30
+
+    time_between_notification:
+      name: Repeat notification
+      description: Number of minutes between two notification
+      default: 30
+      selector:
+        number:
+          min: 5
+          max: 120
+          unit_of_measurement: minutes
+
+mode: parallel
+
+variables:
+  repeat_notification: !input repeat_notification
+  time_between_notification: !input time_between_notification
+  outside_temperature_sensor: !input outside_temperature_sensor
+  room_temperature_sensor: !input room_temperature_sensor
+  temperature_min: !input temperature_min
+  temperature_max: !input temperature_max
+
+trigger:
+  - platform: state
+    entity_id: !input window_binary_sensor
+    to: "on"
+action:
+  - repeat:
+      while:
+        - condition: template
+          value_template: "{{ is_state(trigger.entity_id, 'on') }}"
+        - condition: template
+          value_template: "{{ repeat.index <= repeat_notification }}"
+      sequence:
+        - choose:
+            - conditions:
+                - condition: or
+                  conditions:
+                    - condition: template
+                      value_template: "{{ (states(room_temperature_sensor)|float) < temperature_min and (states(outside_temperature_sensor)|float + 1.5) < (states(room_temperature_sensor)|float) }}"
+                    - condition: template
+                      value_template: "{{ (states(room_temperature_sensor)|float) > temperature_max and (states(outside_temperature_sensor)|float + 1.5) > (states(room_temperature_sensor)|float) }}"
+              sequence:
+                - service: script.notify_presence
+                  data:
+                    message: "Il est recommandé de fermer la {{ trigger.to_state.name | lower | replace('capteur ', '') }} pour garder une température optimale"
+        - delay:
+            minutes: "{{ time_between_notification }}"

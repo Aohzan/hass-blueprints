@@ -1,0 +1,213 @@
+blueprint:
+  name: Vacuum maintenance reminder
+  description: Get a notification when your vacuum needs maintenance
+  domain: automation
+  input:
+    reminder_time:
+      name: Reminder time
+      description: At what time do you want to be reminded
+      selector:
+        time: {}
+
+    notify_device:
+      name: Notification
+      description: Device needs to run the official Home Assistant app to receive notifications
+      selector:
+        device:
+          integration: mobile_app
+
+    vacuum_entity:
+      name: Vacuum entity id
+      selector:
+        entity:
+          domain: vacuum
+
+    notification_title:
+      name: Notification title (Optional)
+      description: "Default: Vacuum maintenance reminder!"
+      default: "Vacuum maintenance reminder!"
+
+    notification_message_sensors:
+      name: Notification message for sensors (Optional)
+      description: "Default: Please clean sensors"
+      default: "Please clean sensors"
+
+    notification_message_filter:
+      name: Notification message for filter (Optional)
+      description: "Default: Please replace filter"
+      default: "Please replace filter"
+
+    notification_message_main_brush:
+      name: Notification message for main brush (Optional)
+      description: "Default: Please replace main brush"
+      default: "Please replace main brush"
+
+    notification_message_side_brush:
+      name: Notification message for side brush (Optional)
+      description: "Default: Please replace side brush"
+      default: "Please replace side brush"
+
+    notification_action_done:
+      name: "Notification action: Done (Optional)"
+      description: "Default: Done"
+      default: "Done"
+
+    notification_action_skip:
+      name: "Notification action: Skip (Optional)"
+      description: "Default: Skip"
+      default: "Skip"
+
+    optional_action:
+      name: Optional action
+      description: Run an action like notify a speaker at the same time that the mobile notification
+      selector:
+        action: {}
+      default: []
+
+trigger:
+  - platform: time
+    at: !input reminder_time
+
+mode: restart
+
+action:
+  - alias: "Check Sensor dirty state"
+    choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input vacuum_entity
+            attribute: "sensor_dirty_left"
+            below: 0
+        sequence:
+          - choose:
+              - conditions: "{{ true }}"
+                sequence: !input optional_action
+          - device_id: !input notify_device
+            domain: mobile_app
+            type: notify
+            title: !input notification_title
+            message: !input notification_message_sensors
+            data:
+              actions:
+                - title: !input notification_action_done
+                  action: "sensor_done"
+                - title: !input notification_action_skip
+                  action: "skip"
+              tag: "vacuum-maintenance-reminder"
+  - alias: "Check Filter time state"
+    choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input vacuum_entity
+            attribute: "filter_left"
+            below: 0
+        sequence:
+          - choose:
+              - conditions: "{{ true }}"
+                sequence: !input optional_action
+          - device_id: !input notify_device
+            domain: mobile_app
+            type: notify
+            title: !input notification_title
+            message: !input notification_message_filter
+            data:
+              actions:
+                - title: !input notification_action_done
+                  action: "filter_done"
+                - title: !input notification_action_skip
+                  action: "skip"
+              tag: "vacuum-maintenance-reminder"
+  - alias: "Check main brush time state"
+    choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input vacuum_entity
+            attribute: "main_brush_left"
+            below: 0
+        sequence:
+          - choose:
+              - conditions: "{{ true }}"
+                sequence: !input optional_action
+          - device_id: !input notify_device
+            domain: mobile_app
+            type: notify
+            title: !input notification_title
+            message: !input notification_message_main_brush
+            data:
+              actions:
+                - title: !input notification_action_done
+                  action: "main_brush_done"
+                - title: !input notification_action_skip
+                  action: "skip"
+              tag: "vacuum-maintenance-reminder"
+  - alias: "Check side brush time state"
+    choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input vacuum_entity
+            attribute: "side_brush_left"
+            below: 0
+        sequence:
+          - choose:
+              - conditions: "{{ true }}"
+                sequence: !input optional_action
+          - device_id: !input notify_device
+            domain: mobile_app
+            type: notify
+            title: !input notification_title
+            message: !input notification_message_side_brush
+            data:
+              actions:
+                - title: !input notification_action_done
+                  action: "side_brush_done"
+                - title: !input notification_action_skip
+                  action: "skip"
+              tag: "vacuum-maintenance-reminder"
+  # handle results
+  - wait_for_trigger:
+      platform: event
+      event_type: mobile_app_notification_action
+    timeout:
+      hours: 1
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == 'sensor_done' }}"
+        sequence:
+          - service: vacuum.send_Command
+            target:
+              entity_id: !input vacuum_entity
+            data:
+              command: reset_consumable
+              params: ["sensor_dirty_time"]
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == 'filter_done' }}"
+        sequence:
+          - service: vacuum.send_Command
+            target:
+              entity_id: !input vacuum_entity
+            data:
+              command: reset_consumable
+              params: ["filter_work_time"]
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == 'main_brush_done' }}"
+        sequence:
+          - service: vacuum.send_Command
+            target:
+              entity_id: !input vacuum_entity
+            data:
+              command: reset_consumable
+              params: ["main_brush_work_time"]
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == 'side_brush_done' }}"
+        sequence:
+          - service: vacuum.send_Command
+            target:
+              entity_id: !input vacuum_entity
+            data:
+              command: reset_consumable
+              params: ["side_brush_work_time"]
+  - device_id: !input notify_device
+    domain: mobile_app
+    type: notify
+    message: "clear_notification"
+    data:
+      tag: "vacuum-maintenance-reminder"
