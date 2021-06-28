@@ -16,7 +16,7 @@ Get advanced notification and history for medication reminder
 
 ## Vacuum maintenance reminder
 
-Get a notification when your vacuum needs maintenance
+Get a notification when your Xiaomi vacuum needs maintenance (tested with Roborock S5 Max)
 
 [vacuum_maintenance_reminder.yaml](blueprints/vacuum_maintenance_reminder.yaml)
 
