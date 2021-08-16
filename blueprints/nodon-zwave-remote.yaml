@@ -1,0 +1,200 @@
+blueprint:
+  name: Nodon Remote (Z-Wave JS)
+  description: "Create automations for the Nodon Soft and Octan Remote using the Z-Wave JS integration."
+
+  domain: automation
+  input:
+    nodon_softremote:
+      name: Nodon remote
+      description: List of available remote devices.
+      selector:
+        device:
+          integration: zwave_js
+          manufacturer: ID-RF
+    button_full_circle_simple:
+      name: "'Full circle' button simple press"
+      description: Action to run when the 'full circle' button is pressed once.
+      default: []
+      selector:
+        action: {}
+    button_full_circle_double:
+      name: "'Full circle' button double press"
+      description: Action to run when the 'full circle' button is pressed twice.
+      default: []
+      selector:
+        action: {}
+    button_full_circle_long:
+      name: "'Full circle' button long press"
+      description: Action to run when the 'full circle' button is pressed for a long time.
+      default: []
+      selector:
+        action: {}
+    button_full_circle_release:
+      name: "'Full circle' button release"
+      description: Action to run when the 'full circle' button is released after a long press.
+      default: []
+      selector:
+        action: {}
+    button_plus_simple:
+      name: "'+' button simple press"
+      description: Action to run when the '+' button is pressed once.
+      default: []
+      selector:
+        action: {}
+    button_plus_double:
+      name: "'+' button double press"
+      description: Action to run when the '+' button is pressed twice.
+      default: []
+      selector:
+        action: {}
+    button_plus_long:
+      name: "'+' button long press"
+      description: Action to run when the '+' button is pressed for a long time.
+      default: []
+      selector:
+        action: {}
+    button_plus_release:
+      name: "'+' button release"
+      description: Action to run when the '+' button is released after a long press.
+      default: []
+      selector:
+        action: {}
+    button_empty_circle_simple:
+      name: "'Empty circle' button simple press"
+      description: Action to run when the 'empty circle' button is pressed once.
+      default: []
+      selector:
+        action: {}
+    button_empty_circle_double:
+      name: "'Empty circle' button double press"
+      description: Action to run when the 'empty circle' button is pressed twice.
+      default: []
+      selector:
+        action: {}
+    button_empty_circle_long:
+      name: "'Empty circle' button long press"
+      description: Action to run when the 'empty circle' button is pressed for a long time.
+      default: []
+      selector:
+        action: {}
+    button_empty_circle_release:
+      name: "'Empty circle' button release"
+      description: Action to run when the 'empty circle' button is released after a long press.
+      default: []
+      selector:
+        action: {}
+    button_minus_simple:
+      name: "'-' button simple press"
+      description: Action to run when the '-' button is pressed once.
+      default: []
+      selector:
+        action: {}
+    button_minus_double:
+      name: "'-' button double press"
+      description: Action to run when the '-' button is pressed twice.
+      default: []
+      selector:
+        action: {}
+    button_minus_long:
+      name: "'-' button simple press"
+      description: Action to run when the '-' button is pressed for a long time.
+      default: []
+      selector:
+        action: {}
+    button_minus_release:
+      name: "'-' button release"
+      description: Action to run when the '-' button is released after a long press.
+      default: []
+      selector:
+        action: {}
+mode: single
+max_exceeded: silent
+variables:
+  device_id: !input "nodon_softremote"
+trigger:
+  - platform: event
+    event_type: zwave_js_value_notification
+condition: "{{ trigger.event.data.device_id == device_id }}"
+action:
+  - variables:
+      property_key_name: "{{ trigger.event.data.property_key_name }}"
+      property_name: "{{ trigger.event.data.property_name }}"
+      label: "{{ trigger.event.data.label }}"
+      command_class_name: "{{ trigger.event.data.command_class_name }}"
+      value: "{{ trigger.event.data.value }}"
+      node_id: "{{ trigger.event.data.node_id }}"
+  - service: logbook.log
+    data:
+      name: Z-Wave JS
+      message:
+        "received event from node {{node_id}}: {{ command_class_name }} - {{
+        value }} - {{ label }}"
+  - choose:
+      # Simple
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '001'\n\
+          \    and value == 'KeyPressed' \n}}\n"
+        sequence: !input "button_full_circle_simple"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '002'\n\
+          \    and value == 'KeyPressed' \n}}\n"
+        sequence: !input "button_plus_simple"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '003'\n\
+          \    and value == 'KeyPressed' \n}}\n"
+        sequence: !input "button_empty_circle_simple"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '004'\n\
+          \    and value == 'KeyPressed' \n}}\n"
+        sequence: !input "button_minus_simple"
+      # Double
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '001'\n\
+          \    and value == 'KeyPressed2x' \n}}\n"
+        sequence: !input "button_full_circle_double"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '002'\n\
+          \    and value == 'KeyPressed2x' \n}}\n"
+        sequence: !input "button_plus_double"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '003'\n\
+          \    and value == 'KeyPressed2x' \n}}\n"
+        sequence: !input "button_empty_circle_double"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '004'\n\
+          \    and value == 'KeyPressed2x' \n}}\n"
+        sequence: !input "button_minus_double"
+      # Long
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '001'\n\
+          \    and value == 'KeyHeldDown' \n}}\n"
+        sequence: !input "button_full_circle_long"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '002'\n\
+          \    and value == 'KeyHeldDown' \n}}\n"
+        sequence: !input "button_plus_long"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '003'\n\
+          \    and value == 'KeyHeldDown' \n}}\n"
+        sequence: !input "button_empty_circle_long"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '004'\n\
+          \    and value == 'KeyHeldDown' \n}}\n"
+        sequence: !input "button_minus_long"
+      # Release
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '001'\n\
+          \    and value == 'KeyReleased' \n}}\n"
+        sequence: !input "button_full_circle_release"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '002'\n\
+          \    and value == 'KeyReleased' \n}}\n"
+        sequence: !input "button_plus_release"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '003'\n\
+          \    and value == 'KeyReleased' \n}}\n"
+        sequence: !input "button_empty_circle_release"
+      - conditions:
+          "{{  property_name == 'scene' \n    and property_key_name == '004'\n\
+          \    and value == 'KeyReleased' \n}}\n"
+        sequence: !input "button_minus_release"
