@@ -96,7 +96,7 @@ blueprint:
       selector:
         action: {}
     button_minus_long:
-      name: "'-' button simple press"
+      name: "'-' button long press"
       description: Action to run when the '-' button is pressed for a long time.
       default: []
       selector:
