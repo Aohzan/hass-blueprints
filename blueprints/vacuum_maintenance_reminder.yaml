@@ -22,6 +22,30 @@ blueprint:
         entity:
           domain: vacuum
 
+    vacuum_dirty_entity:
+      name: Vacuum sensor dirty entity id
+      selector:
+        entity:
+          domain: sensor
+
+    vacuum_filter_entity:
+      name: Vacuum sensor filter entity id
+      selector:
+        entity:
+          domain: sensor
+
+    vacuum_main_brush_entity:
+      name: Vacuum sensor main brush entity id
+      selector:
+        entity:
+          domain: sensor
+
+    vacuum_side_brush_entity:
+      name: Vacuum sensor side brush entity id
+      selector:
+        entity:
+          domain: sensor
+
     notification_title:
       name: Notification title (Optional)
       description: "Default: Vacuum maintenance reminder!"
@@ -75,8 +99,7 @@ action:
     choose:
       - conditions:
           - condition: numeric_state
-            entity_id: !input vacuum_entity
-            attribute: "sensor_dirty_left"
+            entity_id: !input vacuum_dirty_entity
             below: 0
         sequence:
           - choose:
@@ -98,8 +121,7 @@ action:
     choose:
       - conditions:
           - condition: numeric_state
-            entity_id: !input vacuum_entity
-            attribute: "filter_left"
+            entity_id: !input vacuum_filter_entity
             below: 0
         sequence:
           - choose:
@@ -121,8 +143,7 @@ action:
     choose:
       - conditions:
           - condition: numeric_state
-            entity_id: !input vacuum_entity
-            attribute: "main_brush_left"
+            entity_id: !input vacuum_main_brush_entity
             below: 0
         sequence:
           - choose:
@@ -144,8 +165,7 @@ action:
     choose:
       - conditions:
           - condition: numeric_state
-            entity_id: !input vacuum_entity
-            attribute: "side_brush_left"
+            entity_id: !input vacuum_side_brush_entity
             below: 0
         sequence:
           - choose:
