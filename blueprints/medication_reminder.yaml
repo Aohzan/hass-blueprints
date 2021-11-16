@@ -128,10 +128,12 @@ action:
                 action: "later"
               - title: !input notification_action_skip
                 action: "skip"
-            tag: "medication-reminder"
+            tag: !input input_boolean
         - wait_for_trigger:
             platform: event
             event_type: mobile_app_notification_action
+            event_data:
+              tag: !input input_boolean
           timeout:
             minutes: !input ask_later_wait_time
         - choose:
@@ -170,7 +172,7 @@ action:
               type: notify
               message: "clear_notification"
               data:
-                tag: "medication-reminder"
+                tag: !input input_boolean
             - service: logbook.log
               data:
                 name: !input notification_title
