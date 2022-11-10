@@ -169,4 +169,4 @@ action:
                   data:
                     name: !input "notification_title"
                     message: !input "logbook_message_skip"
-                    entity_id: !input "input_boolean"u
+                    entity_id: !input "input_boolean"
