@@ -135,9 +135,7 @@ action:
             tag: !input input_boolean
         - wait_for_trigger:
             platform: event
-            event_type: ios.notification_action_fired
-            event_data: {}
-              #tag: !input "input_boolean"
+            event_type: mobile_app_notification_action
           timeout:
             minutes: !input "ask_later_wait_time"
         - choose:
