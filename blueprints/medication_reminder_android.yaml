@@ -136,6 +136,8 @@ action:
         - wait_for_trigger:
             platform: event
             event_type: mobile_app_notification_action
+            event_data:
+              tag: !input input_boolean
           timeout:
             minutes: !input "ask_later_wait_time"
         - choose:
@@ -168,3 +170,15 @@ action:
                     name: !input "notification_title"
                     message: !input "logbook_message_skip"
                     entity_id: !input "input_boolean"
+          default:
+            - device_id: !input "notify_device"
+              domain: mobile_app
+              type: notify
+              message: "clear_notification"
+              data:
+                tag: !input input_boolean
+            - service: logbook.log
+              data:
+                name: !input "notification_title"
+                message: !input "logbook_message_no_answer"
+                entity_id: !input "input_boolean"
