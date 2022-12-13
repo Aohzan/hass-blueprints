@@ -141,7 +141,7 @@ action:
           timeout:
             minutes: !input "ask_later_wait_time"
         - choose:
-            - conditions: "{{ wait.trigger and wait.trigger.event.data.actionName == 'taken' }}"
+            - conditions: "{{ wait.trigger and wait.trigger.event.data.action == 'taken' }}"
               sequence:
                 - service: input_boolean.turn_on
                   target:
@@ -151,7 +151,7 @@ action:
                     name: !input "notification_title"
                     message: !input "logbook_message_taken"
                     entity_id: !input "input_boolean"
-            - conditions: "{{ wait.trigger and wait.trigger.event.data.actionName == 'later' }}"
+            - conditions: "{{ wait.trigger and wait.trigger.event.data.action == 'later' }}"
               sequence:
                 - service: logbook.log
                   data:
@@ -160,7 +160,7 @@ action:
                     entity_id: !input "input_boolean"
                 - delay:
                     minutes: !input "ask_later_wait_time"
-            - conditions: "{{ wait.trigger and wait.trigger.event.data.actionName == 'skip' }}"
+            - conditions: "{{ wait.trigger and wait.trigger.event.data.action == 'skip' }}"
               sequence:
                 - service: input_boolean.turn_on
                   target:
