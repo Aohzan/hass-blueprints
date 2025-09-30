@@ -125,6 +125,8 @@ action:
           title: !input notification_title
           message: !input notification_message
           data:
+            ttl: 0
+            priority: "high"
             actions:
               - title: !input notification_action_taken
                 action: "taken"
