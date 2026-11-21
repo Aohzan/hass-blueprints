@@ -1,0 +1,444 @@
+blueprint:
+  name: Advanced medication reminder
+  description: >-
+    Send an actionable notification (Taken / Ask later / Skip) to an Android or
+    iOS device running the Home Assistant Companion app, repeat it until an
+    answer is given, and keep the history in the logbook of a dedicated
+    input_boolean.
+
+    Turning the input_boolean on by any other means (dashboard button, NFC tag,
+    script...) also marks the medication as taken and stops the reminder.
+  domain: automation
+  author: Aohzan
+  source_url: https://github.com/Aohzan/hass-blueprints/blob/main/blueprints/medication_reminder.yaml
+  homeassistant:
+    min_version: 2024.10.0
+  input:
+    reminder_time:
+      name: Reminder time
+      description: At what time do you want to be reminded
+      selector:
+        time: {}
+
+    notify_device:
+      name: Notification
+      description: Device needs to run the official Home Assistant app to receive notifications
+      selector:
+        device:
+          integration: mobile_app
+          multiple: false
+
+    input_boolean:
+      name: Dedicated input_boolean
+      description: >-
+        Create and set here a input_boolean to handle history and state of the
+        automation. Turning it on stops the reminder and counts as Taken.
+      selector:
+        entity:
+          domain: input_boolean
+          multiple: false
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      collapsed: true
+      input:
+        weekdays:
+          name: Days
+          description: Days of the week when the reminder runs
+          default: [mon, tue, wed, thu, fri, sat, sun]
+          selector:
+            select:
+              multiple: true
+              mode: list
+              options:
+                - label: Monday
+                  value: mon
+                - label: Tuesday
+                  value: tue
+                - label: Wednesday
+                  value: wed
+                - label: Thursday
+                  value: thu
+                - label: Friday
+                  value: fri
+                - label: Saturday
+                  value: sat
+                - label: Sunday
+                  value: sun
+
+        reminder_conditions:
+          name: Additional conditions (Optional)
+          description: >-
+            All these conditions must pass at the reminder time for the
+            reminder to start, for example a calendar event, a zone or a
+            template for a monthly medication.
+          default: []
+          selector:
+            condition: {}
+
+        ask_later_wait_time:
+          name: Wait time before next reminder
+          description: >-
+            Minutes before notifying again after an Ask later action, or when
+            the notification gets no answer.
+          default: 30
+          selector:
+            number:
+              min: 5
+              max: 1440
+              unit_of_measurement: minutes
+              step: 1
+              mode: slider
+
+    notification:
+      name: Notification
+      icon: mdi:cellphone-message
+      collapsed: true
+      input:
+        notification_title:
+          name: Notification title (Optional)
+          description: "Default: Medication reminder!"
+          default: "Medication reminder!"
+          selector:
+            text: {}
+
+        notification_message:
+          name: Notification message (Optional)
+          description: "Default: It's time to take your medication"
+          default: "It's time to take your medication"
+          selector:
+            text: {}
+
+        notification_action_taken:
+          name: "Notification action: Taken (Optional)"
+          description: "Default: Taken"
+          default: "Taken"
+          selector:
+            text: {}
+
+        notification_action_later:
+          name: "Notification action: Ask later (Optional)"
+          description: "Default: Ask later"
+          default: "Ask later"
+          selector:
+            text: {}
+
+        notification_action_skip:
+          name: "Notification action: Skip (Optional)"
+          description: "Default: Skip"
+          default: "Skip"
+          selector:
+            text: {}
+
+        android_channel:
+          name: Android notification channel
+          description: >-
+            Android only. The channel is created with a high importance the
+            first time it is used. Change its sound or its Do Not Disturb
+            behaviour in the Companion app settings, under Notification
+            channels. Use a different channel per automation to get a
+            different sound per medication.
+          default: "Medication reminder"
+          selector:
+            text: {}
+
+        ios_interruption_level:
+          name: iOS interruption level
+          description: >-
+            iOS only. Time-sensitive breaks through Focus modes, critical also
+            bypasses the mute switch and Do Not Disturb (the Companion app
+            must be allowed to send critical alerts).
+          default: active
+          selector:
+            select:
+              options:
+                - label: Passive
+                  value: passive
+                - label: Active (default)
+                  value: active
+                - label: Time-sensitive
+                  value: time-sensitive
+                - label: Critical
+                  value: critical
+
+    logbook:
+      name: Logbook messages
+      icon: mdi:book-open-variant
+      collapsed: true
+      input:
+        logbook_message_remind:
+          name: Logbook message for remind (Optional)
+          description: "Default: Reminder sent"
+          default: "Reminder sent"
+          selector:
+            text: {}
+
+        logbook_message_taken:
+          name: Logbook message for action Taken (Optional)
+          description: "Default: Medication taken"
+          default: "Medication taken"
+          selector:
+            text: {}
+
+        logbook_message_taken_manually:
+          name: Logbook message when the input_boolean is turned on manually (Optional)
+          description: "Default: Medication marked as taken"
+          default: "Medication marked as taken"
+          selector:
+            text: {}
+
+        logbook_message_later:
+          name: Logbook message for action Ask later (Optional)
+          description: "Default: Postpone reminder"
+          default: "Postpone reminder"
+          selector:
+            text: {}
+
+        logbook_message_skip:
+          name: Logbook message for action Skip (Optional)
+          description: "Default: Reminder skipped"
+          default: "Reminder skipped"
+          selector:
+            text: {}
+
+        logbook_message_no_answer:
+          name: Logbook message for no action after timeout (Optional)
+          description: "Default: No answer time out"
+          default: "No answer time out"
+          selector:
+            text: {}
+
+    extra_actions:
+      name: Additional actions
+      icon: mdi:play-box-multiple
+      collapsed: true
+      input:
+        last_taken_datetime:
+          name: Last taken input_datetime (Optional)
+          description: Set this input_datetime to the current time when the medication is taken
+          default: ""
+          selector:
+            entity:
+              domain: input_datetime
+              multiple: false
+
+        optional_action:
+          name: Action at each reminder (Optional)
+          description: Run an action like notify a speaker at the same time that the mobile notification
+          default: []
+          selector:
+            action: {}
+
+        taken_action:
+          name: Action when taken (Optional)
+          description: >-
+            Run an action when the medication is taken (notification or
+            input_boolean turned on), like decrement a counter of remaining
+            pills or notify someone else.
+          default: []
+          selector:
+            action: {}
+
+        skip_action:
+          name: Action when skipped (Optional)
+          description: Run an action when the reminder is skipped
+          default: []
+          selector:
+            action: {}
+
+        no_answer_action:
+          name: Action when there is no answer (Optional)
+          description: >-
+            Run an action when the notification gets no answer before the
+            wait time, like a TTS announcement, before the next reminder.
+          default: []
+          selector:
+            action: {}
+
+triggers:
+  - trigger: time
+    at: !input reminder_time
+
+conditions:
+  - condition: time
+    weekday: !input weekdays
+  - condition: and
+    conditions: !input reminder_conditions
+
+mode: restart
+
+actions:
+  - alias: Set up variables
+    variables:
+      last_taken_datetime: !input last_taken_datetime
+      ios_interruption_level: !input ios_interruption_level
+      # Action identifiers unique to this run, so that answering another
+      # notification (another medication, an older run) does not count here.
+      action_taken: "{{ 'TAKEN_' ~ context.id }}"
+      action_later: "{{ 'LATER_' ~ context.id }}"
+      action_skip: "{{ 'SKIP_' ~ context.id }}"
+  - action: input_boolean.turn_off
+    target:
+      entity_id: !input input_boolean
+  - alias: Notify until the medication has been taken
+    repeat:
+      while:
+        - condition: state
+          entity_id: !input input_boolean
+          state: "off"
+      sequence:
+        - action: logbook.log
+          data:
+            name: !input notification_title
+            message: !input logbook_message_remind
+            entity_id: !input input_boolean
+        - alias: Action at each reminder
+          sequence: !input optional_action
+        - device_id: !input notify_device
+          domain: mobile_app
+          type: notify
+          title: !input notification_title
+          message: !input notification_message
+          data:
+            tag: !input input_boolean
+            actions:
+              - title: !input notification_action_taken
+                action: "{{ action_taken }}"
+              - title: !input notification_action_later
+                action: "{{ action_later }}"
+              - title: !input notification_action_skip
+                action: "{{ action_skip }}"
+            # Android
+            channel: !input android_channel
+            importance: high
+            priority: high
+            ttl: 0
+            # iOS
+            push:
+              interruption-level: "{{ ios_interruption_level }}"
+        - alias: Wait for an answer
+          wait_for_trigger:
+            - id: taken
+              trigger: event
+              event_type: mobile_app_notification_action
+              event_data:
+                action: "{{ action_taken }}"
+            - id: later
+              trigger: event
+              event_type: mobile_app_notification_action
+              event_data:
+                action: "{{ action_later }}"
+            - id: skip
+              trigger: event
+              event_type: mobile_app_notification_action
+              event_data:
+                action: "{{ action_skip }}"
+            - id: manual
+              trigger: state
+              entity_id: !input input_boolean
+              to: "on"
+          timeout:
+            minutes: !input ask_later_wait_time
+        - choose:
+            - alias: Taken from the notification
+              conditions: "{{ wait.trigger is not none and wait.trigger.id == 'taken' }}"
+              sequence:
+                - action: input_boolean.turn_on
+                  target:
+                    entity_id: !input input_boolean
+                - if: "{{ last_taken_datetime not in ['', none] }}"
+                  then:
+                    - action: input_datetime.set_datetime
+                      target:
+                        entity_id: "{{ last_taken_datetime }}"
+                      data:
+                        timestamp: "{{ now().timestamp() }}"
+                - action: logbook.log
+                  data:
+                    name: !input notification_title
+                    message: !input logbook_message_taken
+                    entity_id: !input input_boolean
+                - alias: Action when taken
+                  sequence: !input taken_action
+            - alias: input_boolean turned on while waiting for an answer
+              conditions: "{{ wait.trigger is not none and wait.trigger.id == 'manual' }}"
+              sequence:
+                - device_id: !input notify_device
+                  domain: mobile_app
+                  type: notify
+                  message: "clear_notification"
+                  data:
+                    tag: !input input_boolean
+                - if: "{{ last_taken_datetime not in ['', none] }}"
+                  then:
+                    - action: input_datetime.set_datetime
+                      target:
+                        entity_id: "{{ last_taken_datetime }}"
+                      data:
+                        timestamp: "{{ now().timestamp() }}"
+                - action: logbook.log
+                  data:
+                    name: !input notification_title
+                    message: !input logbook_message_taken_manually
+                    entity_id: !input input_boolean
+                - alias: Action when taken
+                  sequence: !input taken_action
+            - alias: Ask later
+              conditions: "{{ wait.trigger is not none and wait.trigger.id == 'later' }}"
+              sequence:
+                - action: logbook.log
+                  data:
+                    name: !input notification_title
+                    message: !input logbook_message_later
+                    entity_id: !input input_boolean
+                - alias: Wait before the next reminder, unless the input_boolean is turned on
+                  wait_for_trigger:
+                    - trigger: state
+                      entity_id: !input input_boolean
+                      to: "on"
+                  timeout:
+                    minutes: !input ask_later_wait_time
+                - if: "{{ wait.trigger is not none }}"
+                  then:
+                    - if: "{{ last_taken_datetime not in ['', none] }}"
+                      then:
+                        - action: input_datetime.set_datetime
+                          target:
+                            entity_id: "{{ last_taken_datetime }}"
+                          data:
+                            timestamp: "{{ now().timestamp() }}"
+                    - action: logbook.log
+                      data:
+                        name: !input notification_title
+                        message: !input logbook_message_taken_manually
+                        entity_id: !input input_boolean
+                    - alias: Action when taken
+                      sequence: !input taken_action
+            - alias: Skip
+              conditions: "{{ wait.trigger is not none and wait.trigger.id == 'skip' }}"
+              sequence:
+                - action: input_boolean.turn_on
+                  target:
+                    entity_id: !input input_boolean
+                - action: logbook.log
+                  data:
+                    name: !input notification_title
+                    message: !input logbook_message_skip
+                    entity_id: !input input_boolean
+                - alias: Action when skipped
+                  sequence: !input skip_action
+          default:
+            - device_id: !input notify_device
+              domain: mobile_app
+              type: notify
+              message: "clear_notification"
+              data:
+                tag: !input input_boolean
+            - action: logbook.log
+              data:
+                name: !input notification_title
+                message: !input logbook_message_no_answer
+                entity_id: !input input_boolean
+            - alias: Action when there is no answer
+              sequence: !input no_answer_action
