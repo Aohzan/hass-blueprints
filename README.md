@@ -41,10 +41,17 @@ priority, but some vendors (Samsung, Xiaomi, Huawei...) still delay it. Disable
 the battery optimization of the Companion app, and check that the
 `Medication reminder` notification channel is allowed to alert.
 
-The former `medication_reminder_android.yaml` and `medication_reminder_ios.yaml`
-files are kept as copies of `medication_reminder.yaml`, so that blueprints
-imported from these URLs keep receiving updates. GitHub serves symlinks as
-plain text on raw URLs, hence the copies. Update all three files together.
+Migration from the former Android or iOS blueprint: the
+`medication_reminder_android.yaml` and `medication_reminder_ios.yaml` files are
+deprecated and will be deleted in November 2027. Import the unified blueprint
+with the button above, then edit each automation in YAML and set
+`use_blueprint.path` to `Aohzan/medication_reminder.yaml`: the inputs are the
+same. Until then, the deprecated files receive the same updates and show a
+persistent notification at each run.
+
+The deprecated files are generated from `medication_reminder.yaml` (GitHub
+serves symlinks as plain text on raw URLs): run
+`scripts/build-deprecated-blueprints.sh` after each change.
 
 ---
 

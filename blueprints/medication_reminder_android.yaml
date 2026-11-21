@@ -1,6 +1,12 @@
 blueprint:
-  name: Advanced medication reminder
+  name: Advanced medication reminder (deprecated)
   description: >-
+    **Deprecated:** this blueprint file will be deleted in November 2027.
+    Import the unified blueprint from
+    https://github.com/Aohzan/hass-blueprints/blob/main/blueprints/medication_reminder.yaml
+    then edit each automation in YAML and set `use_blueprint.path` to
+    `Aohzan/medication_reminder.yaml`: the inputs are the same.
+
     Send an actionable notification (Taken / Ask later / Skip) to an Android or
     iOS device running the Home Assistant Companion app, repeat it until an
     answer is given, and keep the history in the logbook of a dedicated
@@ -269,6 +275,17 @@ conditions:
 mode: restart
 
 actions:
+  - alias: Deprecation notice
+    action: persistent_notification.create
+    data:
+      notification_id: "medication_reminder_deprecated_{{ this.entity_id }}"
+      title: Deprecated medication reminder blueprint
+      message: >-
+        The automation "{{ this.attributes.friendly_name }}" uses a
+        medication reminder blueprint file that will be deleted in November 2027.
+        Import the [unified blueprint](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FAohzan%2Fhass-blueprints%2Fmain%2Fblueprints%2Fmedication_reminder.yaml),
+        then edit the automation in YAML and set `use_blueprint.path` to
+        `Aohzan/medication_reminder.yaml`: the inputs are the same.
   - alias: Set up variables
     variables:
       last_taken_datetime: !input last_taken_datetime
