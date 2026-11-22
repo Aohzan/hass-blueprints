@@ -257,14 +257,36 @@ blueprint:
             action: {}
 
 triggers:
-  - trigger: time
+  - id: reminder
+    trigger: time
     at: !input reminder_time
+  - id: manual
+    trigger: state
+    entity_id: !input input_boolean
+    from: "off"
+    to: "on"
 
 conditions:
-  - condition: time
-    weekday: !input weekdays
-  - condition: and
-    conditions: !input reminder_conditions
+  - condition: or
+    conditions:
+      - alias: Reminder time on a selected day
+        condition: and
+        conditions:
+          - condition: trigger
+            id: reminder
+          - condition: time
+            weekday: !input weekdays
+          - condition: and
+            conditions: !input reminder_conditions
+      - alias: >-
+          input_boolean turned on outside a reminder: a running reminder
+          handles it itself, and must not be restarted when it turns the
+          input_boolean on
+        condition: and
+        conditions:
+          - condition: trigger
+            id: manual
+          - "{{ this.attributes.current | default(0) | int(0) == 0 }}"
 
 mode: restart
 
@@ -278,6 +300,26 @@ actions:
       action_taken: "{{ 'TAKEN_' ~ context.id }}"
       action_later: "{{ 'LATER_' ~ context.id }}"
       action_skip: "{{ 'SKIP_' ~ context.id }}"
+  - alias: input_boolean turned on outside a reminder
+    if:
+      - condition: trigger
+        id: manual
+    then:
+      - if: "{{ last_taken_datetime not in ['', none] }}"
+        then:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: "{{ last_taken_datetime }}"
+            data:
+              timestamp: "{{ now().timestamp() }}"
+      - action: logbook.log
+        data:
+          name: !input notification_title
+          message: !input logbook_message_taken_manually
+          entity_id: !input input_boolean
+      - alias: Action when taken
+        sequence: !input taken_action
+      - stop: Medication marked as taken outside a reminder
   - action: input_boolean.turn_off
     target:
       entity_id: !input input_boolean
