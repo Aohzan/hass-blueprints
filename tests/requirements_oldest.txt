@@ -1,0 +1,3 @@
+# Oldest Home Assistant release the blueprints support (min_version 2024.10.0).
+# Keep in sync with the blueprints min_version, not with the latest releases.
+pytest-homeassistant-custom-component==0.13.171

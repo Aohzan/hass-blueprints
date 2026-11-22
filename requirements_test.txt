@@ -1,0 +1,2 @@
+# Latest Home Assistant release the blueprints are tested against.
+pytest-homeassistant-custom-component==0.13.375
